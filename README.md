@@ -1,56 +1,33 @@
-# RandomForest
+# AITurbidez
 
-**AITurbidez** es una prueba de concepto de aprendizaje automático para
-estimar la concentración de monóxido de carbono (`CO`) a partir de variables
-de operación de una turbina de gas. El código de entrenamiento utiliza el
-conjunto de datos UCI identificado como `551`.
+**AITurbidez** es una prueba de concepto que entrena un modelo para estimar la
+concentración de monóxido de carbono (`CO`) en una turbina de gas. Utiliza el
+conjunto de datos UCI 551.
 
-> [!IMPORTANT]
-> **Estado del proyecto:** el entrenamiento y el guardado local del artefacto
-> están implementados. La API Flask todavía no carga el artefacto ni realiza
-> predicciones: su ruta `POST /predict` consulta UCI y devuelve metadatos del
-> conjunto. Los diagramas de arquitectura objetivo representan una evolución
-> propuesta, no funcionalidades disponibles hoy.
+## Estado
 
-## Índice
+El proyecto contiene dos componentes independientes:
 
-- [Alcance y estado](#alcance-y-estado)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Requisitos y puesta en marcha](#requisitos-y-puesta-en-marcha)
-- [Modelo de entrenamiento](#modelo-de-entrenamiento)
-- [API disponible actualmente](#api-disponible-actualmente)
-- [Arquitectura actual y objetivo](#arquitectura-actual-y-objetivo)
-- [Separación entre entrenamiento e inferencia](#separación-entre-entrenamiento-e-inferencia)
-- [Evolución del modelo](#evolución-del-modelo)
-- [Acceso, propiedad intelectual y licencias](#acceso-propiedad-intelectual-y-licencias)
+- `train.py` descarga los datos UCI, entrena y evalúa modelos, y guarda el
+  artefacto y una muestra localmente.
+- `app.py` expone `POST /predict`, que actualmente devuelve metadatos del
+  conjunto UCI. No carga el artefacto ni genera predicciones.
 
-## Alcance y estado
-
-El proyecto contiene dos flujos que hoy son independientes:
-
-1. **Entrenamiento:** obtiene datos, prepara variables, entrena y evalúa
-   modelos, y guarda el paquete del modelo junto a una muestra de prueba.
-2. **API de demostración:** expone una ruta HTTP que devuelve información
-   descriptiva del conjunto de datos. Aún no consume el modelo serializado.
-
-Por lo tanto, ejecutar `python train.py` genera un artefacto local; no lo
-publica ni lo conecta automáticamente con Flask. La integración de
-predicciones en la API es trabajo futuro.
+La integración del modelo en la API todavía no está implementada.
 
 ## Estructura del proyecto
 
-| Archivo | Responsabilidad |
+| Archivo | Descripción |
 | --- | --- |
-| `train.py` | Descarga los datos UCI, selecciona variables, entrena y evalúa los modelos y guarda resultados locales. |
-| `app.py` | Aplicación Flask con `POST /predict`. Actualmente devuelve metadatos del conjunto UCI, no una predicción. |
-| `requirements.txt` | Dependencias Python del proyecto. |
-| `modelo_entrenado.pkl` | Artefacto binario generado por el entrenamiento; contiene el modelo y metadatos auxiliares. |
-| `muestra.json` | Una fila de ejemplo con las variables de entrada. No es una predicción ni contiene el objetivo real. |
+| `train.py` | Entrenamiento y evaluación. |
+| `app.py` | API Flask de demostración. |
+| `requirements.txt` | Dependencias de Python. |
+| `modelo_entrenado.pkl` | Artefacto local de entrenamiento con modelos y metadatos. |
+| `muestra.json` | Muestra de entrada generada durante el entrenamiento. |
 
-`modelo_entrenado.pkl` y `muestra.json` se crean al ejecutar el entrenamiento y
-se guardan en la carpeta del proyecto. El archivo `.pkl` puede ser grande y no
-está diseñado para edición manual. **Solo se deben cargar archivos pickle de
-origen confiable**, porque deserializarlos puede ejecutar código.
+El entrenamiento genera `modelo_entrenado.pkl` y `muestra.json` en la raíz.
+Carga únicamente archivos pickle de origen confiable: deserializarlos puede
+ejecutar código.
 
 ## Requisitos y puesta en marcha
 
@@ -64,9 +41,8 @@ python -m pip install -r requirements.txt
 python train.py
 ```
 
-El entrenamiento genera o reemplaza `modelo_entrenado.pkl` y `muestra.json`.
-También imprime las métricas de evaluación, una fila de prueba, el valor real
-de `CO` para esa fila y las predicciones del modelo y de referencia.
+El script genera o reemplaza `modelo_entrenado.pkl` y `muestra.json`, e imprime
+`R²`, `MAE` y una comparación de predicciones para una fila de prueba.
 
 Para iniciar la API de demostración:
 
@@ -74,10 +50,9 @@ Para iniciar la API de demostración:
 python app.py
 ```
 
-La aplicación escucha en el puerto `5000`. La configuración actual activa el
-modo de depuración y escucha en todas las interfaces; úsese únicamente para
-desarrollo local y no se exponga directamente a Internet o a redes no
-confiables.
+La aplicación escucha en el puerto `5000`, con depuración activada y en todas
+las interfaces. Esta configuración es solo para desarrollo y no debe exponerse
+a Internet ni a redes no confiables.
 
 ## Modelo de entrenamiento
 
@@ -98,15 +73,14 @@ orden guardado en el artefacto:
 | `TEY` | Energía de salida de la turbina |
 | `CDP` | Presión de descarga del compresor |
 
-Los nombres y descripciones corresponden a las variables seleccionadas por el
-proyecto; para interpretaciones de ingeniería y unidades, consúltese la
-documentación original del conjunto UCI.
+Para definiciones de ingeniería y unidades, consulta la documentación del
+conjunto UCI.
 
-### Entrenamiento y evaluación implementados
+### Entrenamiento y evaluación
 
-`train.py` comprueba que las variables seleccionadas no tengan valores
-ausentes y divide los datos **sin mezclar las filas**: 60 % para entrenamiento
-y 40 % para prueba. Entrena dos estimadores:
+`train.py` valida que las variables no tengan valores ausentes y divide los
+datos sin mezclar las filas: 60 % para entrenamiento y 40 % para prueba.
+Entrena dos estimadores:
 
 - **Random Forest (`RandomForestRegressor`)** con 100 árboles: modelo principal
   para la estimación de `CO`.
@@ -136,169 +110,39 @@ usar `paquete["modelo"].predict(datos)`. Esa lógica aún no está integrada en
 
 ## API disponible actualmente
 
-La ruta disponible es `POST /predict`. En su estado actual, la aplicación:
+`POST /predict` consulta UCI en cada petición, comprueba que los datos estén
+disponibles y devuelve los nombres de las columnas y las dimensiones:
 
-1. Consulta el conjunto UCI durante la petición.
-2. Comprueba que los datos originales estén disponibles.
-3. Devuelve nombres de columnas y dimensiones de los datos.
+La ruta no valida entradas de predicción, no carga `modelo_entrenado.pkl` ni
+estima `CO`; es demostrativa y no está lista para inferencia.
 
-No valida un cuerpo de solicitud para predicción, no carga
-`modelo_entrenado.pkl` y no devuelve una estimación de `CO`. En consecuencia,
-la ruta debe considerarse **demostrativa**, no un endpoint de inferencia listo
-para clientes.
+## Próximos pasos
 
-## Arquitectura actual y objetivo
-
-### Implementación actual
-
-```mermaid
-flowchart LR
-    UCI[(Conjunto UCI 551)]
-    Train["train.py<br/>entrenamiento y evaluación"]
-    Artifact[("modelo_entrenado.pkl<br/>modelo + metadatos")]
-    Sample["muestra.json<br/>fila de prueba"]
-    Client["Cliente HTTP"]
-    Flask["app.py<br/>POST /predict"]
-    Metadata["Respuesta actual<br/>metadatos del conjunto"]
-
-    UCI --> Train
-    Train --> Artifact
-    Train --> Sample
-    Client -->|"POST /predict"| Flask
-    Flask -->|"consulta UCI"| UCI
-    Flask --> Metadata
-
-    Artifact -. "Aún no conectado a Flask" .-> Flask
-```
-
-El diagrama distingue el flujo ya implementado del enlace punteado que todavía
-no existe. Actualmente la API depende de UCI en cada petición y no utiliza el
-modelo guardado.
-
-### Arquitectura objetivo propuesta
-
-```mermaid
-flowchart TB
-    subgraph Offline["Fase fuera de línea: preparación y publicación"]
-        Source[("Datos de entrenamiento<br/>UCI u otra fuente aprobada")]
-        Prepare["Preparación y validación<br/>de datos"]
-        Train["Entrenamiento de candidatos"]
-        Evaluate["Evaluación y criterios<br/>de aceptación"]
-        Registry[("Almacén de artefactos<br/>versionados y aprobados")]
-
-        Source --> Prepare --> Train --> Evaluate
-        Evaluate -->|"Aprobado"| Registry
-        Evaluate -.->|"No aprobado: revisar"| Train
-    end
-
-    subgraph Runtime["Fase en línea: servicio de predicción"]
-        Consumer["Cliente autorizado"]
-        API["API HTTP<br/>autenticación y validación"]
-        Inference["Servicio de inferencia<br/>carga modelo aprobado"]
-        Response["Respuesta JSON<br/>CO estimado + versión"]
-
-        Consumer -->|"Solicitud con 9 variables"| API
-        API -->|"Entrada validada"| Inference
-        Inference -->|"Predicción"| API
-        API --> Response
-        Response --> Consumer
-    end
-
-    Registry -->|"Versión aprobada<br/>al desplegar"| Inference
-```
-
-El flujo objetivo separa la producción y aprobación del modelo de las
-peticiones de usuarios. En producción, el servicio cargaría un artefacto
-aprobado y versionado; cada petición enviaría las nueve variables, la API las
-validaría y el servicio devolvería la estimación y la versión utilizada. Este
-flujo es una propuesta de arquitectura y aún requiere implementación,
-pruebas, autenticación, gestión de versiones y despliegue.
-
-### Estructura de código propuesta
-
-La siguiente estructura es orientativa; no representa carpetas existentes:
-
-```text
-AITurbidez/
-├── src/
-│   ├── api/                 # HTTP, validación y respuestas
-│   ├── inference/           # carga del modelo y predicción
-│   └── training/            # datos, entrenamiento y evaluación
-├── artifacts/               # versiones aprobadas y metadatos
-├── tests/                   # pruebas de API, datos e inferencia
-├── app.py                   # inicio del servicio API
-├── train.py                 # inicio del proceso de entrenamiento
-└── requirements.txt
-```
-
-## Separación entre entrenamiento e inferencia
-
-Entrenar y servir predicciones tienen necesidades distintas. El entrenamiento
-puede consumir muchos recursos, acceder a datos de desarrollo y producir
-artefactos; la inferencia debe responder de forma predecible y usar solo
-versiones aprobadas. Mantenerlos como procesos independientes permite:
-
-- evitar que una petición HTTP inicie o altere un entrenamiento;
-- evaluar y aprobar un modelo antes de publicarlo;
-- actualizar o revertir la versión del modelo sin cambiar necesariamente la
-  API;
-- restringir por separado el acceso a datos, código de entrenamiento y
-  artefactos de producción;
-- escalar el servicio de inferencia según la demanda, si el uso lo requiere.
-
-La separación lógica **no obliga** a desplegar microservicios. En una primera
-versión, la API y la inferencia pueden ser módulos en un mismo proceso, con el
-modelo cargado al iniciar. Ejecutar inferencia en otro proceso o servicio
-puede aportar aislamiento y escalado independiente, pero también añade
-latencia de red y complejidad de disponibilidad, autenticación, monitorización
-y despliegue. La decisión debe responder a requisitos reales y medibles.
-
-## Evolución del modelo
-
-Random Forest es una primera opción razonable para datos tabulares: aprende
-relaciones no lineales y permite establecer una referencia sin diseñar una red
-neuronal desde el inicio. El `DummyRegressor` ayuda a determinar si el modelo
-principal mejora una predicción trivial.
-
-La arquitectura del modelo no es definitiva. El equipo podría comparar
-métodos de boosting u otras alternativas, incluidas redes neuronales, si los
-datos, el volumen y el caso de uso lo justifican. Un cambio debe basarse en
-evaluación reproducible, comparación con una línea base, validación en datos
-representativos y revisión del impacto operativo. Deep learning no implica
-automáticamente mejores resultados para datos tabulares.
+La API deberá validar las nueve variables de entrada, cargar una versión
+aprobada del artefacto y devolver la predicción de `CO`. Antes de desplegarla,
+se requieren pruebas, autenticación y configuración segura del servicio. Estas
+funciones aún no están implementadas.
 
 ## Acceso, propiedad intelectual y licencias
 
 ### Acceso y uso con autorización previa
 
-Este proyecto no se publica bajo una licencia open source. Las personas
-interesadas en revisar la tecnología, probarla o desarrollar una implementación
-propia deben solicitar permiso por escrito antes de acceder o usar el código.
-Envía la solicitud a [programacion133@gmail.com](mailto:programacion133@gmail.com)
-e indica quién eres, el propósito de la solicitud y el uso que planeas darle.
-El envío de una solicitud no concede acceso ni autorización; espera la
-aprobación escrita del equipo de investigación y Helio Mind Labs (HML).
+Este proyecto no se distribuye bajo una licencia open source. Para solicitar
+acceso con fines de evaluación, pruebas o desarrollo, escribe a
+[programacion133@gmail.com](mailto:programacion133@gmail.com) e indica tu
+identidad, propósito y uso previsto. El acceso requiere aprobación previa y
+por escrito del equipo de investigación y Helio Mind Labs (HML); enviar una
+solicitud no concede autorización.
 
-Si se autoriza el acceso para evaluación o desarrollo, el trabajo sobre este
-código debe realizarse mediante un **fork de GitHub** del repositorio original,
-para conservar la relación con el proyecto y su historial. No está permitido
-copiar y pegar el código en un repositorio independiente ni quitar avisos de
-autoría o atribución. Los investigadores que se incorporen al equipo también
-deben seguir estas reglas y el alcance del permiso que se les otorgue.
+El trabajo autorizado debe realizarse mediante un **fork de GitHub** del
+repositorio original, conservando los avisos de autoría. No se permite copiar
+el código a un repositorio independiente. Los investigadores que se incorporen
+al equipo deben cumplir las mismas condiciones. El permiso de acceso o prueba
+no autoriza publicar el fork ni redistribuir el código o sus derivados; para
+ello se requiere autorización escrita adicional.
 
-El permiso para acceder, probar o crear un fork no concede por sí solo permiso
-para publicar el fork, redistribuir el código o sus derivados, ni usar el
-proyecto con otros fines. Para hacerlo, se requiere una autorización escrita
-adicional del equipo de investigación y Helio Mind Labs. Los permisos técnicos
-deben configurarse en GitHub y en cualquier almacén de artefactos según las
-autorizaciones concedidas.
-
-Para que la aprobación previa sea un requisito técnico de acceso, el
-repositorio debe mantenerse privado y el acceso debe concederse únicamente a
-las personas aprobadas. Si se mantiene público, GitHub no puede impedir que
-otras personas vean o creen un fork del contenido; este aviso por sí solo no
-aplica controles técnicos.
-
-Esta política se aplica sin perjuicio de las licencias y condiciones de uso de
-terceros, incluidos los datos de UCI y las dependencias del proyecto, que
-deben revisarse y respetarse por separado.
+El repositorio debe ser privado y el acceso limitarse a las personas
+aprobadas. Si es público, GitHub no puede impedir que otras personas vean o
+creen forks; este aviso no aplica controles técnicos. Las licencias y
+condiciones de terceros, incluidos los datos de UCI y las dependencias, deben
+respetarse por separado.
