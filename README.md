@@ -1,19 +1,19 @@
-# AITurbidez
+# qaterMLdetect
 
-**AITurbidez** es una prueba de concepto que entrena un modelo para estimar la
-concentración de monóxido de carbono (`CO`) en una turbina de gas. Utiliza el
-conjunto de datos UCI 551.
+**qaterMLdetect** es un proyecto de machine learning orientado a estimar cuatro
+parámetros de calidad del agua: turbidez, temperatura, conductividad y pH.
 
 ## Estado
 
-El proyecto contiene dos componentes independientes:
+El código disponible todavía no implementa ese objetivo. `train.py` descarga
+el conjunto UCI 551, correspondiente a una turbina de gas, y entrena un modelo
+para estimar monóxido de carbono (`CO`). `app.py` ofrece `POST /predict`, que
+consulta ese conjunto y devuelve metadatos; no carga el modelo ni realiza
+predicciones.
 
-- `train.py` descarga los datos UCI, entrena y evalúa modelos, y guarda el
-  artefacto y una muestra localmente.
-- `app.py` expone `POST /predict`, que actualmente devuelve metadatos del
-  conjunto UCI. No carga el artefacto ni genera predicciones.
-
-La integración del modelo en la API todavía no está implementada.
+Por tanto, el prototipo actual no predice turbidez, temperatura, conductividad
+ni pH. Para implementar qaterMLdetect se necesita integrar datos de calidad
+del agua adecuados y entrenar y evaluar el modelo para esos cuatro objetivos.
 
 ## Estructura del proyecto
 
@@ -25,14 +25,14 @@ La integración del modelo en la API todavía no está implementada.
 | `modelo_entrenado.pkl` | Artefacto local de entrenamiento con modelos y metadatos. |
 | `muestra.json` | Muestra de entrada generada durante el entrenamiento. |
 
-El entrenamiento genera `modelo_entrenado.pkl` y `muestra.json` en la raíz.
+El prototipo actual genera `modelo_entrenado.pkl` y `muestra.json` en la raíz.
 Carga únicamente archivos pickle de origen confiable: deserializarlos puede
 ejecutar código.
 
 ## Requisitos y puesta en marcha
 
-Se requiere Python y conexión a Internet para descargar el conjunto de datos
-desde UCI. En PowerShell, desde la raíz del proyecto:
+Para ejecutar el prototipo actual se requiere Python y conexión a Internet
+para descargar los datos UCI. En PowerShell, desde la raíz del proyecto:
 
 ```powershell
 python -m venv venv
@@ -42,7 +42,9 @@ python train.py
 ```
 
 El script genera o reemplaza `modelo_entrenado.pkl` y `muestra.json`, e imprime
-`R²`, `MAE` y una comparación de predicciones para una fila de prueba.
+`R²`, `MAE` y una comparación de predicciones para una fila de prueba. Estos
+resultados corresponden a la estimación de `CO` del prototipo, no a los cuatro
+parámetros de calidad del agua.
 
 Para iniciar la API de demostración:
 
@@ -54,74 +56,27 @@ La aplicación escucha en el puerto `5000`, con depuración activada y en todas
 las interfaces. Esta configuración es solo para desarrollo y no debe exponerse
 a Internet ni a redes no confiables.
 
-## Modelo de entrenamiento
+## Prototipo de entrenamiento actual
 
-### Datos y variables
+El prototipo usa nueve variables de operación de turbina (`AT`, `AP`, `AH`,
+`AFDP`, `GTEP`, `TIT`, `TAT`, `TEY` y `CDP`) para estimar `CO`. Entrena un
+`RandomForestRegressor` y un `DummyRegressor` de referencia; divide los datos
+sin mezclarlos en 60 % para entrenamiento y 40 % para prueba, y calcula `R²` y
+el error absoluto medio (`MAE`). Este flujo es independiente del objetivo de
+calidad del agua de qaterMLdetect.
 
-El objetivo de regresión es `CO`. El modelo recibe estas nueve variables, en el
-orden guardado en el artefacto:
+## API actual
 
-| Variable | Descripción |
-| --- | --- |
-| `AT` | Temperatura ambiente |
-| `AP` | Presión ambiente |
-| `AH` | Humedad ambiente |
-| `AFDP` | Presión diferencial del filtro de aire |
-| `GTEP` | Presión de escape de la turbina de gas |
-| `TIT` | Temperatura de entrada de la turbina |
-| `TAT` | Temperatura de salida de la turbina |
-| `TEY` | Energía de salida de la turbina |
-| `CDP` | Presión de descarga del compresor |
-
-Para definiciones de ingeniería y unidades, consulta la documentación del
-conjunto UCI.
-
-### Entrenamiento y evaluación
-
-`train.py` valida que las variables no tengan valores ausentes y divide los
-datos sin mezclar las filas: 60 % para entrenamiento y 40 % para prueba.
-Entrena dos estimadores:
-
-- **Random Forest (`RandomForestRegressor`)** con 100 árboles: modelo principal
-  para la estimación de `CO`.
-- **Dummy (`DummyRegressor`)** que predice el promedio: referencia sencilla
-  para comparar el valor del modelo principal.
-
-El script calcula `R²` y el error absoluto medio (`MAE`) para Random Forest.
-Estas métricas permiten una evaluación inicial, pero no garantizan por sí
-solas que el modelo generalice a otros períodos, turbinas o condiciones de
-operación.
-
-### Contenido del artefacto
-
-El diccionario guardado en `modelo_entrenado.pkl` contiene:
-
-| Clave | Contenido |
-| --- | --- |
-| `modelo` | Random Forest entrenado. |
-| `referencia` | Dummy de referencia entrenado. |
-| `entradas` | Nombres y orden esperado de las variables de entrada. |
-| `objetivo` | Nombre de la variable estimada: `CO`. |
-
-Para inferir, un consumidor debe cargar el artefacto confiable con `joblib`,
-construir una tabla que contenga todas las variables en el formato esperado y
-usar `paquete["modelo"].predict(datos)`. Esa lógica aún no está integrada en
-`app.py`.
-
-## API disponible actualmente
-
-`POST /predict` consulta UCI en cada petición, comprueba que los datos estén
-disponibles y devuelve los nombres de las columnas y las dimensiones:
-
-La ruta no valida entradas de predicción, no carga `modelo_entrenado.pkl` ni
-estima `CO`; es demostrativa y no está lista para inferencia.
+`POST /predict` consulta el conjunto UCI 551 y devuelve nombres de columnas y
+dimensiones. No acepta mediciones de calidad del agua ni devuelve turbidez,
+temperatura, conductividad o pH.
 
 ## Próximos pasos
 
-La API deberá validar las nueve variables de entrada, cargar una versión
-aprobada del artefacto y devolver la predicción de `CO`. Antes de desplegarla,
-se requieren pruebas, autenticación y configuración segura del servicio. Estas
-funciones aún no están implementadas.
+Para cumplir el objetivo de qaterMLdetect, se debe seleccionar un conjunto de
+datos de calidad del agua con las variables de entrada y los cuatro valores
+objetivo; entrenar y validar las predicciones; y adaptar la API para recibir
+mediciones y devolver resultados. Estas funciones aún no están implementadas.
 
 ## Acceso, propiedad intelectual y licencias
 
