@@ -1,61 +1,38 @@
-# RandomForest
+# qaterMLdetect
 
-**AITurbidez** es una prueba de concepto de aprendizaje automático para
-estimar la concentración de monóxido de carbono (`CO`) a partir de variables
-de operación de una turbina de gas. El código de entrenamiento utiliza el
-conjunto de datos UCI identificado como `551`.
+**qaterMLdetect** es un proyecto de machine learning orientado a estimar cuatro
+parámetros de calidad del agua: turbidez, temperatura, conductividad y pH.
 
-> [!IMPORTANT]
-> **Estado del proyecto:** el entrenamiento y el guardado local del artefacto
-> están implementados. La API Flask todavía no carga el artefacto ni realiza
-> predicciones: su ruta `POST /predict` consulta UCI y devuelve metadatos del
-> conjunto. Los diagramas de arquitectura objetivo representan una evolución
-> propuesta, no funcionalidades disponibles hoy.
+## Estado
 
-## Índice
+El código disponible todavía no implementa ese objetivo. `train.py` descarga
+el conjunto UCI 551, correspondiente a una turbina de gas, y entrena un modelo
+para estimar monóxido de carbono (`CO`). `app.py` ofrece `POST /predict`, que
+consulta ese conjunto y devuelve metadatos; no carga el modelo ni realiza
+predicciones.
 
-- [Alcance y estado](#alcance-y-estado)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Requisitos y puesta en marcha](#requisitos-y-puesta-en-marcha)
-- [Modelo de entrenamiento](#modelo-de-entrenamiento)
-- [API disponible actualmente](#api-disponible-actualmente)
-- [Arquitectura actual y objetivo](#arquitectura-actual-y-objetivo)
-- [Separación entre entrenamiento e inferencia](#separación-entre-entrenamiento-e-inferencia)
-- [Evolución del modelo](#evolución-del-modelo)
-- [Acceso, propiedad intelectual y licencias](#acceso-propiedad-intelectual-y-licencias)
-
-## Alcance y estado
-
-El proyecto contiene dos flujos que hoy son independientes:
-
-1. **Entrenamiento:** obtiene datos, prepara variables, entrena y evalúa
-   modelos, y guarda el paquete del modelo junto a una muestra de prueba.
-2. **API de demostración:** expone una ruta HTTP que devuelve información
-   descriptiva del conjunto de datos. Aún no consume el modelo serializado.
-
-Por lo tanto, ejecutar `python train.py` genera un artefacto local; no lo
-publica ni lo conecta automáticamente con Flask. La integración de
-predicciones en la API es trabajo futuro.
+Por tanto, el prototipo actual no predice turbidez, temperatura, conductividad
+ni pH. Para implementar qaterMLdetect se necesita integrar datos de calidad
+del agua adecuados y entrenar y evaluar el modelo para esos cuatro objetivos.
 
 ## Estructura del proyecto
 
-| Archivo | Responsabilidad |
+| Archivo | Descripción |
 | --- | --- |
-| `train.py` | Descarga los datos UCI, selecciona variables, entrena y evalúa los modelos y guarda resultados locales. |
-| `app.py` | Aplicación Flask con `POST /predict`. Actualmente devuelve metadatos del conjunto UCI, no una predicción. |
-| `requirements.txt` | Dependencias Python del proyecto. |
-| `modelo_entrenado.pkl` | Artefacto binario generado por el entrenamiento; contiene el modelo y metadatos auxiliares. |
-| `muestra.json` | Una fila de ejemplo con las variables de entrada. No es una predicción ni contiene el objetivo real. |
+| `train.py` | Entrenamiento y evaluación. |
+| `app.py` | API Flask de demostración. |
+| `requirements.txt` | Dependencias de Python. |
+| `modelo_entrenado.pkl` | Artefacto local de entrenamiento con modelos y metadatos. |
+| `muestra.json` | Muestra de entrada generada durante el entrenamiento. |
 
-`modelo_entrenado.pkl` y `muestra.json` se crean al ejecutar el entrenamiento y
-se guardan en la carpeta del proyecto. El archivo `.pkl` puede ser grande y no
-está diseñado para edición manual. **Solo se deben cargar archivos pickle de
-origen confiable**, porque deserializarlos puede ejecutar código.
+El prototipo actual genera `modelo_entrenado.pkl` y `muestra.json` en la raíz.
+Carga únicamente archivos pickle de origen confiable: deserializarlos puede
+ejecutar código.
 
 ## Requisitos y puesta en marcha
 
-Se requiere Python y conexión a Internet para descargar el conjunto de datos
-desde UCI. En PowerShell, desde la raíz del proyecto:
+Para ejecutar el prototipo actual se requiere Python y conexión a Internet
+para descargar los datos UCI. En PowerShell, desde la raíz del proyecto:
 
 ```powershell
 python -m venv venv
@@ -64,9 +41,10 @@ python -m pip install -r requirements.txt
 python train.py
 ```
 
-El entrenamiento genera o reemplaza `modelo_entrenado.pkl` y `muestra.json`.
-También imprime las métricas de evaluación, una fila de prueba, el valor real
-de `CO` para esa fila y las predicciones del modelo y de referencia.
+El script genera o reemplaza `modelo_entrenado.pkl` y `muestra.json`, e imprime
+`R²`, `MAE` y una comparación de predicciones para una fila de prueba. Estos
+resultados corresponden a la estimación de `CO` del prototipo, no a los cuatro
+parámetros de calidad del agua.
 
 Para iniciar la API de demostración:
 
@@ -74,231 +52,52 @@ Para iniciar la API de demostración:
 python app.py
 ```
 
-La aplicación escucha en el puerto `5000`. La configuración actual activa el
-modo de depuración y escucha en todas las interfaces; úsese únicamente para
-desarrollo local y no se exponga directamente a Internet o a redes no
-confiables.
+La aplicación escucha en el puerto `5000`, con depuración activada y en todas
+las interfaces. Esta configuración es solo para desarrollo y no debe exponerse
+a Internet ni a redes no confiables.
 
-## Modelo de entrenamiento
+## Prototipo de entrenamiento actual
 
-### Datos y variables
+El prototipo usa nueve variables de operación de turbina (`AT`, `AP`, `AH`,
+`AFDP`, `GTEP`, `TIT`, `TAT`, `TEY` y `CDP`) para estimar `CO`. Entrena un
+`RandomForestRegressor` y un `DummyRegressor` de referencia; divide los datos
+sin mezclarlos en 60 % para entrenamiento y 40 % para prueba, y calcula `R²` y
+el error absoluto medio (`MAE`). Este flujo es independiente del objetivo de
+calidad del agua de qaterMLdetect.
 
-El objetivo de regresión es `CO`. El modelo recibe estas nueve variables, en el
-orden guardado en el artefacto:
+## API actual
 
-| Variable | Descripción |
-| --- | --- |
-| `AT` | Temperatura ambiente |
-| `AP` | Presión ambiente |
-| `AH` | Humedad ambiente |
-| `AFDP` | Presión diferencial del filtro de aire |
-| `GTEP` | Presión de escape de la turbina de gas |
-| `TIT` | Temperatura de entrada de la turbina |
-| `TAT` | Temperatura de salida de la turbina |
-| `TEY` | Energía de salida de la turbina |
-| `CDP` | Presión de descarga del compresor |
+`POST /predict` consulta el conjunto UCI 551 y devuelve nombres de columnas y
+dimensiones. No acepta mediciones de calidad del agua ni devuelve turbidez,
+temperatura, conductividad o pH.
 
-Los nombres y descripciones corresponden a las variables seleccionadas por el
-proyecto; para interpretaciones de ingeniería y unidades, consúltese la
-documentación original del conjunto UCI.
+## Próximos pasos
 
-### Entrenamiento y evaluación implementados
-
-`train.py` comprueba que las variables seleccionadas no tengan valores
-ausentes y divide los datos **sin mezclar las filas**: 60 % para entrenamiento
-y 40 % para prueba. Entrena dos estimadores:
-
-- **Random Forest (`RandomForestRegressor`)** con 100 árboles: modelo principal
-  para la estimación de `CO`.
-- **Dummy (`DummyRegressor`)** que predice el promedio: referencia sencilla
-  para comparar el valor del modelo principal.
-
-El script calcula `R²` y el error absoluto medio (`MAE`) para Random Forest.
-Estas métricas permiten una evaluación inicial, pero no garantizan por sí
-solas que el modelo generalice a otros períodos, turbinas o condiciones de
-operación.
-
-### Contenido del artefacto
-
-El diccionario guardado en `modelo_entrenado.pkl` contiene:
-
-| Clave | Contenido |
-| --- | --- |
-| `modelo` | Random Forest entrenado. |
-| `referencia` | Dummy de referencia entrenado. |
-| `entradas` | Nombres y orden esperado de las variables de entrada. |
-| `objetivo` | Nombre de la variable estimada: `CO`. |
-
-Para inferir, un consumidor debe cargar el artefacto confiable con `joblib`,
-construir una tabla que contenga todas las variables en el formato esperado y
-usar `paquete["modelo"].predict(datos)`. Esa lógica aún no está integrada en
-`app.py`.
-
-## API disponible actualmente
-
-La ruta disponible es `POST /predict`. En su estado actual, la aplicación:
-
-1. Consulta el conjunto UCI durante la petición.
-2. Comprueba que los datos originales estén disponibles.
-3. Devuelve nombres de columnas y dimensiones de los datos.
-
-No valida un cuerpo de solicitud para predicción, no carga
-`modelo_entrenado.pkl` y no devuelve una estimación de `CO`. En consecuencia,
-la ruta debe considerarse **demostrativa**, no un endpoint de inferencia listo
-para clientes.
-
-## Arquitectura actual y objetivo
-
-### Implementación actual
-
-```mermaid
-flowchart LR
-    UCI[(Conjunto UCI 551)]
-    Train["train.py<br/>entrenamiento y evaluación"]
-    Artifact[("modelo_entrenado.pkl<br/>modelo + metadatos")]
-    Sample["muestra.json<br/>fila de prueba"]
-    Client["Cliente HTTP"]
-    Flask["app.py<br/>POST /predict"]
-    Metadata["Respuesta actual<br/>metadatos del conjunto"]
-
-    UCI --> Train
-    Train --> Artifact
-    Train --> Sample
-    Client -->|"POST /predict"| Flask
-    Flask -->|"consulta UCI"| UCI
-    Flask --> Metadata
-
-    Artifact -. "Aún no conectado a Flask" .-> Flask
-```
-
-El diagrama distingue el flujo ya implementado del enlace punteado que todavía
-no existe. Actualmente la API depende de UCI en cada petición y no utiliza el
-modelo guardado.
-
-### Arquitectura objetivo propuesta
-
-```mermaid
-flowchart TB
-    subgraph Offline["Fase fuera de línea: preparación y publicación"]
-        Source[("Datos de entrenamiento<br/>UCI u otra fuente aprobada")]
-        Prepare["Preparación y validación<br/>de datos"]
-        Train["Entrenamiento de candidatos"]
-        Evaluate["Evaluación y criterios<br/>de aceptación"]
-        Registry[("Almacén de artefactos<br/>versionados y aprobados")]
-
-        Source --> Prepare --> Train --> Evaluate
-        Evaluate -->|"Aprobado"| Registry
-        Evaluate -.->|"No aprobado: revisar"| Train
-    end
-
-    subgraph Runtime["Fase en línea: servicio de predicción"]
-        Consumer["Cliente autorizado"]
-        API["API HTTP<br/>autenticación y validación"]
-        Inference["Servicio de inferencia<br/>carga modelo aprobado"]
-        Response["Respuesta JSON<br/>CO estimado + versión"]
-
-        Consumer -->|"Solicitud con 9 variables"| API
-        API -->|"Entrada validada"| Inference
-        Inference -->|"Predicción"| API
-        API --> Response
-        Response --> Consumer
-    end
-
-    Registry -->|"Versión aprobada<br/>al desplegar"| Inference
-```
-
-El flujo objetivo separa la producción y aprobación del modelo de las
-peticiones de usuarios. En producción, el servicio cargaría un artefacto
-aprobado y versionado; cada petición enviaría las nueve variables, la API las
-validaría y el servicio devolvería la estimación y la versión utilizada. Este
-flujo es una propuesta de arquitectura y aún requiere implementación,
-pruebas, autenticación, gestión de versiones y despliegue.
-
-### Estructura de código propuesta
-
-La siguiente estructura es orientativa; no representa carpetas existentes:
-
-```text
-AITurbidez/
-├── src/
-│   ├── api/                 # HTTP, validación y respuestas
-│   ├── inference/           # carga del modelo y predicción
-│   └── training/            # datos, entrenamiento y evaluación
-├── artifacts/               # versiones aprobadas y metadatos
-├── tests/                   # pruebas de API, datos e inferencia
-├── app.py                   # inicio del servicio API
-├── train.py                 # inicio del proceso de entrenamiento
-└── requirements.txt
-```
-
-## Separación entre entrenamiento e inferencia
-
-Entrenar y servir predicciones tienen necesidades distintas. El entrenamiento
-puede consumir muchos recursos, acceder a datos de desarrollo y producir
-artefactos; la inferencia debe responder de forma predecible y usar solo
-versiones aprobadas. Mantenerlos como procesos independientes permite:
-
-- evitar que una petición HTTP inicie o altere un entrenamiento;
-- evaluar y aprobar un modelo antes de publicarlo;
-- actualizar o revertir la versión del modelo sin cambiar necesariamente la
-  API;
-- restringir por separado el acceso a datos, código de entrenamiento y
-  artefactos de producción;
-- escalar el servicio de inferencia según la demanda, si el uso lo requiere.
-
-La separación lógica **no obliga** a desplegar microservicios. En una primera
-versión, la API y la inferencia pueden ser módulos en un mismo proceso, con el
-modelo cargado al iniciar. Ejecutar inferencia en otro proceso o servicio
-puede aportar aislamiento y escalado independiente, pero también añade
-latencia de red y complejidad de disponibilidad, autenticación, monitorización
-y despliegue. La decisión debe responder a requisitos reales y medibles.
-
-## Evolución del modelo
-
-Random Forest es una primera opción razonable para datos tabulares: aprende
-relaciones no lineales y permite establecer una referencia sin diseñar una red
-neuronal desde el inicio. El `DummyRegressor` ayuda a determinar si el modelo
-principal mejora una predicción trivial.
-
-La arquitectura del modelo no es definitiva. El equipo podría comparar
-métodos de boosting u otras alternativas, incluidas redes neuronales, si los
-datos, el volumen y el caso de uso lo justifican. Un cambio debe basarse en
-evaluación reproducible, comparación con una línea base, validación en datos
-representativos y revisión del impacto operativo. Deep learning no implica
-automáticamente mejores resultados para datos tabulares.
+Para cumplir el objetivo de qaterMLdetect, se debe seleccionar un conjunto de
+datos de calidad del agua con las variables de entrada y los cuatro valores
+objetivo; entrenar y validar las predicciones; y adaptar la API para recibir
+mediciones y devolver resultados. Estas funciones aún no están implementadas.
 
 ## Acceso, propiedad intelectual y licencias
 
 ### Acceso y uso con autorización previa
 
-Este proyecto no se publica bajo una licencia open source. Las personas
-interesadas en revisar la tecnología, probarla o desarrollar una implementación
-propia deben solicitar permiso por escrito antes de acceder o usar el código.
-Envía la solicitud a [programacion133@gmail.com](mailto:programacion133@gmail.com)
-e indica quién eres, el propósito de la solicitud y el uso que planeas darle.
-El envío de una solicitud no concede acceso ni autorización; espera la
-aprobación escrita del equipo de investigación y Helio Mind Labs (HML).
+Este proyecto no se distribuye bajo una licencia open source. Para solicitar
+acceso con fines de evaluación, pruebas o desarrollo, escribe a
+[programacion133@gmail.com](mailto:programacion133@gmail.com) e indica tu
+identidad, propósito y uso previsto. El acceso requiere aprobación previa y
+por escrito del equipo de investigación y Helio Mind Labs (HML); enviar una
+solicitud no concede autorización.
 
-Si se autoriza el acceso para evaluación o desarrollo, el trabajo sobre este
-código debe realizarse mediante un **fork de GitHub** del repositorio original,
-para conservar la relación con el proyecto y su historial. No está permitido
-copiar y pegar el código en un repositorio independiente ni quitar avisos de
-autoría o atribución. Los investigadores que se incorporen al equipo también
-deben seguir estas reglas y el alcance del permiso que se les otorgue.
+El trabajo autorizado debe realizarse mediante un **fork de GitHub** del
+repositorio original, conservando los avisos de autoría. No se permite copiar
+el código a un repositorio independiente. Los investigadores que se incorporen
+al equipo deben cumplir las mismas condiciones. El permiso de acceso o prueba
+no autoriza publicar el fork ni redistribuir el código o sus derivados; para
+ello se requiere autorización escrita adicional.
 
-El permiso para acceder, probar o crear un fork no concede por sí solo permiso
-para publicar el fork, redistribuir el código o sus derivados, ni usar el
-proyecto con otros fines. Para hacerlo, se requiere una autorización escrita
-adicional del equipo de investigación y Helio Mind Labs. Los permisos técnicos
-deben configurarse en GitHub y en cualquier almacén de artefactos según las
-autorizaciones concedidas.
-
-Para que la aprobación previa sea un requisito técnico de acceso, el
-repositorio debe mantenerse privado y el acceso debe concederse únicamente a
-las personas aprobadas. Si se mantiene público, GitHub no puede impedir que
-otras personas vean o creen un fork del contenido; este aviso por sí solo no
-aplica controles técnicos.
-
-Esta política se aplica sin perjuicio de las licencias y condiciones de uso de
-terceros, incluidos los datos de UCI y las dependencias del proyecto, que
-deben revisarse y respetarse por separado.
+El repositorio debe ser privado y el acceso limitarse a las personas
+aprobadas. Si es público, GitHub no puede impedir que otras personas vean o
+creen forks; este aviso no aplica controles técnicos. Las licencias y
+condiciones de terceros, incluidos los datos de UCI y las dependencias, deben
+respetarse por separado.
