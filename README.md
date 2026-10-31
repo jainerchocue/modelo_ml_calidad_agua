@@ -1,4 +1,4 @@
-# AITurbidez
+# RandomForest
 
 **AITurbidez** es una prueba de concepto de aprendizaje automático para
 estimar la concentración de monóxido de carbono (`CO`) a partir de variables
@@ -269,34 +269,38 @@ automáticamente mejores resultados para datos tabulares.
 
 ## Acceso, propiedad intelectual y licencias
 
-La intención de gobierno del proyecto es que **solo integrantes autorizados
-por el equipo puedan modificar el código o aprobar cambios de arquitectura**.
-Quienes necesiten consultar el proyecto, pero no contribuir, deberían recibir
-acceso de solo lectura y únicamente a los recursos necesarios.
+### Aviso de uso y distribución restringidos
 
-La intención de compartir el modelo separadamente del código debe entenderse
-como una decisión de distribución y permisos, no como una propiedad automática
-del archivo `.pkl`:
+Este repositorio no concede una licencia abierta ni autorización general para
+usar, modificar o compartir sus contenidos. **Queda prohibido distribuir,
+publicar, transferir, sublicenciar o poner a disposición de terceros**, total
+o parcialmente, el código, la documentación, los datos, los modelos, los
+artefactos generados o sus derivados sin obtener antes autorización expresa y
+por escrito **tanto del equipo de investigación como de HML**. La autorización
+de una de estas partes no sustituye la de la otra. El acceso al repositorio,
+incluso si fuera público, no constituye permiso para esos usos.
+
+El acceso de lectura o escritura debe limitarse a las personas autorizadas por
+el equipo de investigación y HML. Los permisos técnicos deben configurarse en
+el proveedor del repositorio y en cualquier almacén de artefactos; este aviso
+no impone esos controles.
+
+Esta política se aplica sin perjuicio de las licencias y condiciones de uso de
+terceros, incluidos los datos de UCI y las dependencias del proyecto:
 
 - El artefacto `.pkl` no es, por sí mismo, una licencia ni convierte al modelo
-  en “open source”. La distribución debe especificar qué se comparte y qué
-  usos, modificaciones o redistribuciones se permiten.
+  en “open source”; también queda sujeto a la autorización descrita arriba.
 - Este repositorio contiene `train.py` y `app.py`; por ello, el código fuente
-  está presente en el proyecto. El acceso efectivo depende de los permisos
-  configurados para el repositorio y los sistemas de almacenamiento.
-- No se identificó un archivo de licencia en la raíz del proyecto. Hasta que
-  el equipo apruebe los términos y añada las licencias correspondientes, no se
-  debe afirmar que el código es legalmente cerrado ni que el modelo es
-  legalmente abierto.
+  está presente en el proyecto. La visibilidad del repositorio no reemplaza
+  los permisos ni la autorización por escrito.
 - Documentar la arquitectura no impide que alguien la lea, la copie o la
-  implemente por separado. Las restricciones de acceso requieren controles
-  técnicos; la confidencialidad, propiedad intelectual y redistribución
-  requieren términos legales apropiados.
-- Antes de compartir datos o modelos derivados, se deben revisar la
-  procedencia y las condiciones de uso del conjunto UCI y de las dependencias.
+  implemente por separado. Este aviso no sustituye los controles técnicos ni
+  los acuerdos legales que correspondan.
+- Antes de compartir datos o modelos derivados, se deben revisar su
+  procedencia y las condiciones de uso aplicables.
 
-Los permisos de lectura y escritura deben configurarse en el proveedor del
-repositorio y en el almacén de artefactos. Este README expresa la política
-prevista, pero no impone controles técnicos ni sustituye una licencia, un
-acuerdo de confidencialidad o asesoría legal. El equipo responsable debe
-aprobar los términos antes de distribuir externamente código, datos o modelos.
+Este aviso documenta la política solicitada por el proyecto, pero no sustituye
+una licencia formal, un acuerdo de confidencialidad ni asesoría legal. Para
+establecer términos legalmente revisados, el equipo de investigación y HML
+deben aprobarlos y publicarlos en un archivo de licencia adecuado. Confirma
+que “HML” sea el nombre o la sigla que debe figurar en la versión oficial.
