@@ -269,48 +269,36 @@ automáticamente mejores resultados para datos tabulares.
 
 ## Acceso, propiedad intelectual y licencias
 
-### Aviso de uso y distribución restringidos
+### Acceso y uso con autorización previa
 
-**Este proyecto es de uso restringido.** Únicamente el equipo de investigación
-y Helio Mind Labs (HML) están autorizados para acceder y usar el código, la
-documentación, los datos, los modelos, los artefactos generados y sus
-derivados. Los investigadores que se incorporen al equipo podrán recibir
-acceso a esta tecnología para realizar pruebas y actividades de investigación,
-siempre dentro de las autorizaciones y los permisos que les otorgue el equipo.
-Su incorporación no les concede permisos adicionales ni excepciones a esta
-política: deben cumplir las mismas reglas de acceso, uso, modificación y
-distribución que el resto del equipo.
+Este proyecto no se publica bajo una licencia open source. Las personas
+interesadas en revisar la tecnología, probarla o desarrollar una implementación
+propia deben solicitar permiso por escrito antes de acceder o usar el código.
+Envía la solicitud a [programacion133@gmail.com](mailto:programacion133@gmail.com)
+e indica quién eres, el propósito de la solicitud y el uso que planeas darle.
+El envío de una solicitud no concede acceso ni autorización; espera la
+aprobación escrita del equipo de investigación y Helio Mind Labs (HML).
 
-Solo las personas autorizadas por el equipo de investigación y Helio Mind Labs
-pueden modificar, ajustar, rediseñar o distribuir los materiales del proyecto.
+Si se autoriza el acceso para evaluación o desarrollo, el trabajo sobre este
+código debe realizarse mediante un **fork de GitHub** del repositorio original,
+para conservar la relación con el proyecto y su historial. No está permitido
+copiar y pegar el código en un repositorio independiente ni quitar avisos de
+autoría o atribución. Los investigadores que se incorporen al equipo también
+deben seguir estas reglas y el alcance del permiso que se les otorgue.
 
-Toda persona ajena a esos grupos debe obtener autorización expresa y por
-escrito del equipo de investigación y de Helio Mind Labs antes de acceder,
-copiar, usar, modificar o distribuir cualquier parte del proyecto. La solicitud
-de acceso no constituye autorización. Sin ese permiso previo, dichas
-actividades no están permitidas. Esta restricción aplica también si el
-repositorio o alguno de sus contenidos está disponible públicamente.
+El permiso para acceder, probar o crear un fork no concede por sí solo permiso
+para publicar el fork, redistribuir el código o sus derivados, ni usar el
+proyecto con otros fines. Para hacerlo, se requiere una autorización escrita
+adicional del equipo de investigación y Helio Mind Labs. Los permisos técnicos
+deben configurarse en GitHub y en cualquier almacén de artefactos según las
+autorizaciones concedidas.
 
-Los responsables del repositorio deben limitar los permisos de lectura y
-escritura a las personas autorizadas y aplicar los controles correspondientes
-en GitHub y en cualquier almacén de artefactos.
+Para que la aprobación previa sea un requisito técnico de acceso, el
+repositorio debe mantenerse privado y el acceso debe concederse únicamente a
+las personas aprobadas. Si se mantiene público, GitHub no puede impedir que
+otras personas vean o creen un fork del contenido; este aviso por sí solo no
+aplica controles técnicos.
 
 Esta política se aplica sin perjuicio de las licencias y condiciones de uso de
-terceros, incluidos los datos de UCI y las dependencias del proyecto:
-
-- El artefacto `.pkl` no es, por sí mismo, una licencia ni convierte al modelo
-  en “open source”; también queda sujeto a la política de acceso y uso
-  restringidos descrita arriba.
-- Este repositorio contiene `train.py` y `app.py`; por ello, el código fuente
-  está presente en el proyecto. Su disponibilidad no concede permiso para
-  acceder, copiarlo o distribuirlo.
-- Documentar la arquitectura no impide que alguien la lea, la copie o la
-  implemente por separado; esas actividades siguen sujetas a la autorización
-  escrita indicada en esta política.
-- Antes de compartir datos o modelos derivados, se deben revisar su
-  procedencia y las condiciones de uso aplicables.
-
-Esta política expresa las condiciones de acceso, modificación y distribución
-establecidas por el equipo de investigación y Helio Mind Labs para este
-proyecto. Las licencias y condiciones de terceros, incluidos los datos de UCI
-y las dependencias, se mantienen vigentes y deben respetarse por separado.
+terceros, incluidos los datos de UCI y las dependencias del proyecto, que
+deben revisarse y respetarse por separado.
