@@ -276,14 +276,15 @@ usar, modificar o compartir sus contenidos. **Queda prohibido distribuir,
 publicar, transferir, sublicenciar o poner a disposición de terceros**, total
 o parcialmente, el código, la documentación, los datos, los modelos, los
 artefactos generados o sus derivados sin obtener antes autorización expresa y
-por escrito **tanto del equipo de investigación como de HML**. La autorización
-de una de estas partes no sustituye la de la otra. El acceso al repositorio,
+por escrito **tanto del equipo de investigación como de Helio Mind Labs
+(HML)**. La autorización de una de estas partes no sustituye la de la otra.
+El acceso al repositorio,
 incluso si fuera público, no constituye permiso para esos usos.
 
 El acceso de lectura o escritura debe limitarse a las personas autorizadas por
-el equipo de investigación y HML. Los permisos técnicos deben configurarse en
-el proveedor del repositorio y en cualquier almacén de artefactos; este aviso
-no impone esos controles.
+el equipo de investigación y Helio Mind Labs. Los permisos técnicos deben
+configurarse en el proveedor del repositorio y en cualquier almacén de
+artefactos; este aviso no impone esos controles.
 
 Esta política se aplica sin perjuicio de las licencias y condiciones de uso de
 terceros, incluidos los datos de UCI y las dependencias del proyecto:
@@ -301,6 +302,7 @@ terceros, incluidos los datos de UCI y las dependencias del proyecto:
 
 Este aviso documenta la política solicitada por el proyecto, pero no sustituye
 una licencia formal, un acuerdo de confidencialidad ni asesoría legal. Para
-establecer términos legalmente revisados, el equipo de investigación y HML
-deben aprobarlos y publicarlos en un archivo de licencia adecuado. Confirma
-que “HML” sea el nombre o la sigla que debe figurar en la versión oficial.
+establecer términos legalmente revisados, el equipo de investigación y Helio
+Mind Labs deben aprobarlos y publicarlos en un archivo de licencia adecuado.
+La mención de Helio Mind Labs aquí no constituye por sí sola una declaración
+de titularidad ni una licencia formal.
