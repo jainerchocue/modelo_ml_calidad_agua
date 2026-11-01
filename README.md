@@ -1,6 +1,6 @@
-# qaterMLdetect
+# WaterMLdetect
 
-**qaterMLdetect** es un proyecto de machine learning orientado a estimar cuatro
+**WaterMLdetect** es un proyecto de machine learning orientado a estimar cuatro
 parámetros de calidad del agua: turbidez, temperatura, conductividad y pH.
 
 ## Estado
